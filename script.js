@@ -1,10 +1,11 @@
 // Importing the shader code from the different files. By code, I mean literally a long string containing the code.
 // They are really js files containing only the string, the .wgsl is just to tell me it's wgsl (shader) code.
 import updateCode from "./shaders/updateWave.wgsl.js"
+import colorCode from "./shaders/color.wgsl.js"
 import transcribeCode from "./shaders/transcribe.wgsl.js"
 import renderCode from "./shaders/renderWave.wgsl.js"
 
-const numWavelengths = 3
+const numWavelengths = 50
 
 // a function to load an external image as a texture
 async function loadTexture(url, device) {
@@ -94,7 +95,7 @@ async function main() {
         compute: { module: updateModule } //use the code for updating
     })
 
-    const obstaclesTexture = await loadTexture("laser.png", device) //load an image as the obstacles, you can try the other images here
+    const obstaclesTexture = await loadTexture("obstacles.png", device) //load an image as the obstacles, you can try the other images here
     const iorTexture = await loadTexture("IOR.png", device) //image storing ior data
 
     // to do the simulation (to approximate a second derivative), I need to store 3 frames: this one, the last one, and the before-last one
@@ -128,6 +129,26 @@ async function main() {
     uniformsViews.clickPos[0] = -1; uniformsViews.clickPos[1] = -1 //<- this is the default value for no click, it will be reset later
     uniformsViews.textureSize[0] = canvas.clientWidth; uniformsViews.textureSize[1] = canvas.clientHeight
     uniformsViews.time[0] = 0
+
+    // -----------------color setup----------------- //
+    const colorModule = device.createShaderModule({
+        label: "simulation to color module",
+        code: colorCode
+    })
+
+    const colorPipeline = device.createComputePipeline({
+        label: "simulation to color pipeline",
+        layout: "auto",
+        compute: { module: colorModule }
+    })
+
+    const colorTexture = device.createTexture({
+        label: "wave simulation to color texture",
+        format: "rgba8unorm",
+        dimension: "2d",
+        size: [canvas.clientWidth, canvas.clientHeight],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
+    })
 
     // -----------------transcription setup----------------- //
     //* the wave is in an r32float texture, it needs to be transcribed to an rgba8unorm with a compute shader so that it can be rendered in a fragment shader and shown to the user
@@ -177,9 +198,10 @@ async function main() {
         layout: renderPipeline.getBindGroupLayout(0),
         entries: [
             { binding: 0, resource: transcribedWaveTexture.createView() }, //<- the wave texture to render
-            { binding: 1, resource: linearSampler }, //<- a sampler, telling the shader how to sample the texture
-            { binding: 2, resource: obstaclesTexture.createView() }, //<- the texture containing the obstacles, because I want to overlay the obstacles on top of the wave
-            { binding: 3, resource: iorTexture.createView() }
+            { binding: 1, resource: colorTexture.createView() },
+            { binding: 2, resource: linearSampler }, //<- a sampler, telling the shader how to sample the texture
+            { binding: 3, resource: obstaclesTexture.createView() }, //<- the texture containing the obstacles, because I want to overlay the obstacles on top of the wave
+            { binding: 4, resource: iorTexture.createView() }
         ]
     })
 
@@ -239,6 +261,23 @@ async function main() {
 
         lastUpdatedTexture = (lastUpdatedTexture + 1) % 3 //a new texture has just been updated
 
+        // color stuff
+        const colorBindGroup = device.createBindGroup({
+            layout: colorPipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: colorTexture.createView() },
+                { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() }
+            ]
+        })
+
+        const colorEncoder = device.createCommandEncoder()
+        const colorComputePass = colorEncoder.beginComputePass()
+        colorComputePass.setPipeline(colorPipeline)
+        colorComputePass.setBindGroup(0, colorBindGroup)
+        colorComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight)
+        colorComputePass.end()
+        const colorCommandBuffer = colorEncoder.finish()
+        device.queue.submit([colorCommandBuffer])
 
         // -----------------transcription stuff----------------- //
         const transcribeBindGroup = device.createBindGroup({
