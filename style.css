@@ -1,14 +1,57 @@
 #mainCanvas {
-    border: 20px;
+    border-width: 10px;
     margin:auto;
     border-style: solid;
-    border-color: rgb(56, 75, 75);
+    border-color: rgb(60, 75, 75);
     border-radius: 10px;
+}
+#content {
+    margin:auto;
+    width: 900px;
 }
 #divCanvas {
     justify-content: center;
     display: flex;
+    float: left;
+}
+#divControl {
+    background-color: rgb(50, 60, 60);
+    float:right;
+    height: 600px;
+    width: 250px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: rgb(60, 75, 75);
+    border-radius: 10px;
+}
+#scenarioDropdown {
+    height: 150px;
 }
 body {
-    background-color: rgb(84, 99, 99);
+    background-color: rgb(80, 90, 90);
+    margin:5px;
+}
+button {
+    margin:5px;
+}
+select {
+    margin:5px;
+    border-radius: 5px;
+    border-color: rgb(30, 40, 40);
+    border-width: 2px;
+    border-style: solid;
+    height: 40px;
+    width: 50%;
+    background-color: lightgrey;
+}
+button {
+    margin:5px;
+    border-radius: 5px;
+    border-color: rgb(30, 40, 40);
+    border-width: 2px;
+    border-style: solid;
+    background-color: lightgrey;
+}
+button:active {
+    background-color: rgb(97, 97, 97);
 }

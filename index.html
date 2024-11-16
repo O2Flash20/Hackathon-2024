@@ -13,8 +13,20 @@
 
 <body>
     <!-- this is the canvas where the final image is displayed to the user. All of the textures get their size from this canvas -->
-    <div id="divCanvas">
-        <canvas id="mainCanvas" width="600" height="600"></canvas>
+    <div id="content">
+        <div id="divCanvas">
+            <canvas id="mainCanvas" width="600" height="600"></canvas>
+        </div>
+        <div id="divControl">
+            <select>
+                <option value="doubleSlit">Double Slit</option>
+                <option value="singleSlit">Single Slit</option>
+                <option value="obstacles">Obstacles</option>
+                <option value="rocks">Rocks</option>
+                <option value="laser">Laser</option>
+            </select>
+            <button id="button">Stupid Fucking Button</button>
+        </div>
     </div>
 </body>
 
