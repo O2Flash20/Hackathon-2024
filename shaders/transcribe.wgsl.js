@@ -8,13 +8,13 @@ export default /*wgsl*/ `
 ){
     let i = id.xy;
 
-    let originalValue = textureLoad(originalTexture, i, 0).r;
+    let originalValue = textureLoad(originalTexture, i, 0).rg;
 
     textureStore(
         outputTexture, i, 
         vec4f(
-            100*originalValue, //make positive values red and brighter
-            -100*originalValue, //make negative values green and brighter
+            100*originalValue.g, //make positive values red and brighter
+            -100*originalValue.g, //make negative values green and brighter
             0,
             1
         )

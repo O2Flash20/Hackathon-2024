@@ -18,7 +18,7 @@ async function loadTexture(url, device) {
         label: url,
         format: "rgba8unorm", // <- rgba means red, green, blue, and alpha; 8 means each of those is 8 bits; unorm means unsigned and normalized (values from 0 to 1)
         size: [source.width, source.height],
-        usage: 
+        usage:
             GPUTextureUsage.TEXTURE_BINDING | //we want to use it as a texture in a bind group
             GPUTextureUsage.COPY_DST | //we want to copy something to it (the next thing we do)
             GPUTextureUsage.RENDER_ATTACHMENT //also need this to copy something to it
@@ -92,7 +92,8 @@ async function main() {
         compute: { module: updateModule } //use the code for updating
     })
 
-    const obstaclesTexture = await loadTexture("diffraction.png", device) //load an image as the obstacles, you can try the other images here
+    const obstaclesTexture = await loadTexture("laser.png", device) //load an image as the obstacles, you can try the other images here
+    const iorTexture = await loadTexture("IOR.png", device) //image storing ior data
 
     // to do the simulation (to approximate a second derivative), I need to store 3 frames: this one, the last one, and the before-last one
     // so I have an array of 3 and cycle through them, keeping track of which is the most recent
@@ -101,7 +102,7 @@ async function main() {
     for (let i = 0; i < 3; i++) {
         waveTextures[i] = device.createTexture({
             label: "wave texture " + i,
-            format: "r32float", //r32 means there's only one channel (which is technically red, but that doesn't really mean anything), and the data will be a float because that's the best way to describe the values in the wave
+            format: "rg32float",
             dimension: "2d",
             size: [canvas.clientWidth, canvas.clientHeight],
             usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING // <- storage binding because it's going to be the output of a compute shader (to do that, it needs to be a storage texture), texture binding because it's going to be the input of another compute shader (to do that it needs to be a regular texture)
@@ -175,7 +176,8 @@ async function main() {
         entries: [
             { binding: 0, resource: transcribedWaveTexture.createView() }, //<- the wave texture to render
             { binding: 1, resource: linearSampler }, //<- a sampler, telling the shader how to sample the texture
-            { binding: 2, resource: obstaclesTexture.createView() } //<- the texture containing the obstacles, because I want to overlay the obstacles on top of the wave
+            { binding: 2, resource: obstaclesTexture.createView() }, //<- the texture containing the obstacles, because I want to overlay the obstacles on top of the wave
+            { binding: 3, resource: iorTexture.createView() }
         ]
     })
 
@@ -212,7 +214,8 @@ async function main() {
                 { binding: 1, resource: waveTextures[(lastUpdatedTexture + 1) % 3].createView() }, //the texture we're going to be updating (after this, it will be the most recent)
                 { binding: 2, resource: waveTextures[lastUpdatedTexture].createView() }, //the last texture that was updated
                 { binding: 3, resource: waveTextures[(lastUpdatedTexture + 2) % 3].createView() }, //the before-last texture
-                { binding: 4, resource: obstaclesTexture.createView() } //the obstacles
+                { binding: 4, resource: obstaclesTexture.createView() }, //the obstacles
+                { binding: 5, resource: iorTexture.createView() }
             ]
         })
 

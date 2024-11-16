@@ -10,15 +10,18 @@ struct uniforms {
 
 // telling the gpu what everything it was sent in the bind group is
 @group(0) @binding(0) var<uniform> u: uniforms;
-@group(0) @binding(1) var outputTexture: texture_storage_2d<r32float, write>;
+@group(0) @binding(1) var outputTexture: texture_storage_2d<rg32float, write>;
 @group(0) @binding(2) var lastTexture: texture_2d<f32>;
 @group(0) @binding(3) var beforeLastTexture: texture_2d<f32>;
 @group(0) @binding(4) var obstaclesTexture: texture_2d<f32>;
+@group(0) @binding(5) var iorTexture: texture_2d<f32>;
 
 const c = 299792458.; //the speed of light
 const dt = 0.000000000004; //the time between each frame
 const dx = 0.003; //each pixel is 3mm apart
 const dy = 0.003;
+
+const pi = 3.141592653589793438;
 
 const wavelength = 0.015; //we want waves with a wavelength of 1.5cm
 const frequency = c / wavelength; //so we need to drive a specific frequency to get that
@@ -41,6 +44,8 @@ fn sampleRebound(texture: texture_2d<f32>, pos: vec2i) -> f32 {
 ){
     let i = vec2i(id.xy); //because I have each pixel a workgroup, its id corresponds to the pixel it should work on
 
+    let ior = textureLoad(iorTexture, i, 0).r * 2;
+    let v = c/ior;
 
     // if this pixel is an obstacle, make its value the average of wave values around it. this is a way of getting the wave to bounce off the obstacle
     if (textureLoad(obstaclesTexture, i, 0).r == 1.) {
@@ -64,33 +69,33 @@ fn sampleRebound(texture: texture_2d<f32>, pos: vec2i) -> f32 {
     }
 
     //this pixel is the source of the wave, so force its value to follow a sine wave
-    else if (i.x==300 &&i.y==0) { 
+    else if (i.x==300 && i.y==0) { 
         let t = u.time * dt;
         let theta = u.time * dt * 6.28 * frequency; //gives the wave the wavelength i want
-        textureStore(outputTexture, i, vec4f(sin(theta)));
+        textureStore(outputTexture, i, vec4f(sin(theta), cos(theta), 0, 0));
     }
 
     // if it's not an obstacle or the source, we have to figure out what its new value should be while satisfying the wave equation
     else {
         let beforeLastValue = sampleRebound(beforeLastTexture, i);
 
-        let lastValue = sampleRebound(lastTexture, i);
-        let lastValueRight = sampleRebound(lastTexture, i + vec2i(1, 0));
-        let lastValueLeft = sampleRebound(lastTexture, i + vec2i(-1, 0));
-        let lastValueTop = sampleRebound(lastTexture, i + vec2i(0, 1));
-        let lastValueBottom = sampleRebound(lastTexture, i + vec2i(0, -1));
+        let lastValue = textureLoad(lastTexture, i, 0);
+        let lastValueRight = textureLoad(lastTexture, i + vec2i(1, 0), 0);
+        let lastValueLeft = textureLoad(lastTexture, i + vec2i(-1, 0), 0);
+        let lastValueTop = textureLoad(lastTexture, i + vec2i(0, 1), 0);
+        let lastValueBottom = textureLoad(lastTexture, i + vec2i(0, -1), 0);
 
         // this is where all the big work of solving the wave equation happens (it's surprisingly short)
         var nextValue = 2*lastValue - beforeLastValue 
-        + pow(c*dt/dx, 2)*(lastValueRight - 2*lastValue + lastValueLeft)
-        + pow(c*dt/dy, 2)*(lastValueTop - 2*lastValue + lastValueBottom);
+        + pow(v*dt/dx, 2)*(lastValueRight - 2*lastValue + lastValueLeft)
+        + pow(v*dt/dy, 2)*(lastValueTop - 2*lastValue + lastValueBottom);
 
-        // if the user clicked and this pixel is in a certain radius of the click, add a peak in the wave
-        if (u.clickPos.x >= 0 && u.clickPos.x < u.textureSize.x && u.clickPos.y >= 0 && u.clickPos.y < u.textureSize.y){
-            if (distance(vec2f(u.clickPos), vec2f(i)) < 4) {nextValue += 0.001;}
-        }
+        // nextValue.rg = clamp(nextValue.rg, vec2f(-10, 10), vec2f(10, 10));
+        nextValue.r = clamp(nextValue.r, -10, 10);
+        nextValue.g = clamp(nextValue.g, -10, 10);
 
-        textureStore(outputTexture, i, vec4f(nextValue*0.999)); //i multiply by a bit less than 1 because it would get too crazy otherwise as the wave rebounds and adds up
+        // !might be able to remove the 0.999
+        textureStore(outputTexture, i, vec4f(nextValue.r*0.999, nextValue.g*0.999, 0, 0)); //i multiply by a bit less than 1 because it would get too crazy otherwise as the wave rebounds and adds up
     }
 }
 
