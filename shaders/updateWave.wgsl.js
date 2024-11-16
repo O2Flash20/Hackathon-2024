@@ -2,8 +2,6 @@ export default /*wgsl*/ `
 
 // this tells the gpu how to interpret the uniforms it get sent by the cpu (because it came as one big pack of bits)
 struct uniforms {
-    clickPos: vec2u, //vec2u: a 2d vector of positive integers
-    textureSize: vec2u,
     time: f32
 }
 
@@ -15,7 +13,7 @@ struct uniforms {
 @group(0) @binding(4) var obstaclesTexture: texture_2d<f32>;
 @group(0) @binding(5) var iorTexture: texture_2d<f32>;
 
-const numWavelengths = 1;
+_NUMWAVELENGTHS
 
 const c = 299792458.; //the speed of light
 const dt = 0.000000000004; //the time between each frame
@@ -52,8 +50,10 @@ const pi = 3.141592653589793438;
 
         textureStore(outputTexture, i, vec4f(0));*/
     }
+
     //this pixel is the source of the wave, so force its value to follow a sine wave
-    else if (i.x==300 && i.y==1) {
+    _EMITTER
+    // else if (i.x==300 && i.y==1) {
         let wavelength = ((700-400)*(f32(i.z)+.5)/numWavelengths+400)*0.00009;
         let frequency = c / (wavelength*ior);
         let t = u.time * dt;

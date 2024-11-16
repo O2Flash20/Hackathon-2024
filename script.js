@@ -5,7 +5,32 @@ import colorCode from "./shaders/color.wgsl.js"
 import transcribeCode from "./shaders/transcribe.wgsl.js"
 import renderCode from "./shaders/renderWave.wgsl.js"
 
-const numWavelengths = 50;
+let shouldStop = false
+document.getElementById("startButton").addEventListener("click", function () {
+    shouldStop = true
+})
+
+async function start(device) {
+    let obstacleTexture = await loadTexture(
+        document.getElementById("obstacleSelect").value,
+        device
+    )
+    let iorTexture = await loadTexture(
+        document.getElementById("IORSelect").value,
+        device
+    )
+    let emitterType = document.getElementById("emitterSelect").value
+    let emitterCode = ""
+    if (emitterType == "point") {
+        emitterCode = `else if (i.x==300 && i.y==1) {`
+    }
+    else if (emitterType == "direction") {
+        emitterCode = `else if (i.y==1) {`
+    }
+    let numWavelengths = Number(document.getElementById("numWavelengths").value)
+
+    main({ obstacleTexture, iorTexture, emitterCode, numWavelengths })
+}
 
 // a function to load an external image as a texture
 async function loadTexture(url, device) {
@@ -36,16 +61,32 @@ async function loadTexture(url, device) {
     return texture
 }
 
-async function main() {
-
+let device; let canvas; let context; let presentationFormat
+async function setup() {
     // set up the device (gpu)
     const adapter = await navigator.gpu?.requestAdapter()
-    const device = await adapter?.requestDevice()
+    device = await adapter?.requestDevice()
     if (!device) {
         alert("need a browser that supports WebGPU")
         return
     }
 
+    // get the canvas from the html
+    canvas = document.getElementById("mainCanvas")
+    context = canvas.getContext("webgpu")
+
+    // the gpu prefers a format to use when rendering
+    presentationFormat = navigator.gpu.getPreferredCanvasFormat()
+    context.configure({
+        device,
+        format: presentationFormat,
+    })
+
+    start(device)
+}
+setup()
+
+async function main(scene) {
     // Tells the fragment shader how to sample images. This blends pixels linearly and repeats the image for values out of the bounds of [0, 1]
     const linearSampler = device.createSampler({
         addressModeU: "repeat",
@@ -56,37 +97,16 @@ async function main() {
         mipmapFilter: "linear",
     })
 
-    // get the canvas from the html
-    const canvas = document.getElementById("mainCanvas")
-    const context = canvas.getContext("webgpu")
-
-    // the gpu prefers a format to use when rendering
-    const presentationFormat = navigator.gpu.getPreferredCanvasFormat()
-    context.configure({
-        device,
-        format: presentationFormat,
-    })
-
-    // the simulation also works by putting down peak in the wave where you click, so this gets if the mouse is down and where it is
-    let mouseIsDown = false
-    canvas.addEventListener("mousedown", function () { mouseIsDown = true })
-    canvas.addEventListener("mouseup", function () { mouseIsDown = false })
-    let cursorPos = { x: 0, y: 0 }
-    document.addEventListener("mousemove", function (e) {
-        const canvasBounds = canvas.getBoundingClientRect()
-        cursorPos = {
-            x: e.clientX - canvasBounds.left,
-            y: e.clientY - canvasBounds.top
-        }
-    })
-
     // I have 3 separate shaders in this simulation, the first one updates the raw values in the field making the wave
 
     // -----------------update setup----------------- //
 
     const updateModule = device.createShaderModule({
         label: "wave update shader module",
-        code: updateCode //the actual gpu code
+        code:
+            updateCode
+                .replace("_NUMWAVELENGTHS", `const numWavelengths = ${scene.numWavelengths};`)
+                .replace("_EMITTER", scene.emitterCode)
     })
 
     const updatePipeline = device.createComputePipeline({ //this is going to be a compute pipeline because i'm not rendering an image, but instead using the gpu to compute a bunch of values (outputting a bunch of floats formatted in a texture because it's easy)
@@ -95,8 +115,8 @@ async function main() {
         compute: { module: updateModule } //use the code for updating
     })
 
-    const obstaclesTexture = await loadTexture("obstacles/doubleSlit.png", device) //load an image as the obstacles, you can try the other images here
-    const iorTexture = await loadTexture("ior/none.png", device) //image storing ior data
+    const obstaclesTexture = scene.obstacleTexture
+    const iorTexture = scene.iorTexture
 
     // to do the simulation (to approximate a second derivative), I need to store 3 frames: this one, the last one, and the before-last one
     // so I have an array of 3 and cycle through them, keeping track of which is the most recent
@@ -107,33 +127,29 @@ async function main() {
             label: "wave texture " + i,
             format: "rg32float",
             dimension: "3d",
-            size: [canvas.clientWidth, canvas.clientHeight, numWavelengths],
+            size: [canvas.clientWidth, canvas.clientHeight, scene.numWavelengths],
             usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING // <- storage binding because it's going to be the output of a compute shader (to do that, it needs to be a storage texture), texture binding because it's going to be the input of another compute shader (to do that it needs to be a regular texture)
         })
     }
 
     // this is going to be a buffer that can be sent right to the gpu so that I can send information from the cpu to the gpu
     // it's called a uniform because it's the same (uniform) for every thread of the gpu
-    const uniformsBuffer = device.createBuffer({
-        size: 24,
+    const updateUniformsBuffer = device.createBuffer({
+        size: 4,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })
-    const uniformsValues = new ArrayBuffer(24)
-    const uniformsViews = {
-        clickPos: new Uint32Array(uniformsValues, 0, 2),
-        textureSize: new Uint32Array(uniformsValues, 8, 2),
-        time: new Float32Array(uniformsValues, 16, 1),
+    const updateUniformsValues = new ArrayBuffer(4)
+    const updateUniformsViews = {
+        time: new Float32Array(updateUniformsValues),
     }
 
     // setting the initial values of the uniforms
-    uniformsViews.clickPos[0] = -1; uniformsViews.clickPos[1] = -1 //<- this is the default value for no click, it will be reset later
-    uniformsViews.textureSize[0] = canvas.clientWidth; uniformsViews.textureSize[1] = canvas.clientHeight
-    uniformsViews.time[0] = 0
+    updateUniformsViews.time[0] = 0
 
     // -----------------color setup----------------- //
     const colorModule = device.createShaderModule({
         label: "simulation to color module",
-        code: colorCode
+        code: colorCode.replace("_NUMWAVELENGTHS", `const numWavelengths = ${scene.numWavelengths};`)
     })
 
     const colorPipeline = device.createComputePipeline({
@@ -149,6 +165,16 @@ async function main() {
         size: [canvas.clientWidth, canvas.clientHeight],
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
     })
+
+    const colorUniformsBuffer = device.createBuffer({
+        size: 4,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    })
+    const colorUniformsValues = new ArrayBuffer(4)
+    const colorUniformsViews = {
+        brightness: new Float32Array(colorUniformsValues),
+    }
+    colorUniformsViews.brightness[0] = 0
 
     // -----------------transcription setup----------------- //
     //* the wave is in an r32float texture, it needs to be transcribed to an rgba8unorm with a compute shader so that it can be rendered in a fragment shader and shown to the user
@@ -192,6 +218,17 @@ async function main() {
         }
     })
 
+    const renderUniformsBuffer = device.createBuffer({
+        size: 4,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    })
+    const renderUniformsValues = new ArrayBuffer(4)
+    const renderUniformsViews = {
+        isColor: new Int32Array(renderUniformsValues),
+    }
+    // setting the initial values of the uniforms
+    renderUniformsViews.isColor[0] = 1
+
     // for the other shaders, the bind group is set each frame because it changes. this one can just be done once at the beginning
     // this is what the gpu gets sent from the cpu
     const renderBindGroup = device.createBindGroup({
@@ -201,7 +238,8 @@ async function main() {
             { binding: 1, resource: colorTexture.createView() },
             { binding: 2, resource: linearSampler }, //<- a sampler, telling the shader how to sample the texture
             { binding: 3, resource: obstaclesTexture.createView() }, //<- the texture containing the obstacles, because I want to overlay the obstacles on top of the wave
-            { binding: 4, resource: iorTexture.createView() }
+            { binding: 4, resource: iorTexture.createView() },
+            { binding: 5, resource: { buffer: renderUniformsBuffer } }
         ]
     })
 
@@ -218,23 +256,23 @@ async function main() {
     }
 
     let frameCount = 0
-    function render() { // this gets called each frame
+    async function render() { // this gets called each frame
+        if (shouldStop) {
+            shouldStop = false
+            await start(device)
+            return
+        }
+
         frameCount++
 
         // -----------------update stuff----------------- //
-        if (mouseIsDown) {
-            uniformsViews.clickPos[0] = cursorPos.x; uniformsViews.clickPos[1] = cursorPos.y
-        }
-        else {
-            uniformsViews.clickPos[0] = -1; uniformsViews.clickPos[1] = -1
-        }
-        uniformsViews.time[0] = frameCount
-        device.queue.writeBuffer(uniformsBuffer, 0, uniformsValues) //<- update the buffer object
+        updateUniformsViews.time[0] = frameCount
+        device.queue.writeBuffer(updateUniformsBuffer, 0, updateUniformsValues) //<- update the buffer object
 
         const updateBindGroup = device.createBindGroup({
             layout: updatePipeline.getBindGroupLayout(0),
             entries: [
-                { binding: 0, resource: { buffer: uniformsBuffer } }, //all the uniforms
+                { binding: 0, resource: { buffer: updateUniformsBuffer } }, //all the uniforms
                 { binding: 1, resource: waveTextures[(lastUpdatedTexture + 1) % 3].createView() }, //the texture we're going to be updating (after this, it will be the most recent)
                 { binding: 2, resource: waveTextures[lastUpdatedTexture].createView() }, //the last texture that was updated
                 { binding: 3, resource: waveTextures[(lastUpdatedTexture + 2) % 3].createView() }, //the before-last texture
@@ -252,7 +290,7 @@ async function main() {
         })
         updateComputePass.setPipeline(updatePipeline)
         updateComputePass.setBindGroup(0, updateBindGroup)
-        updateComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, numWavelengths) //make each pixel be dealt with by its own thread (that's what makes the gpu so powerful) (technically a workgroup can be multiple threads, but in gpu code I say it's just one)
+        updateComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, scene.numWavelengths) //make each pixel be dealt with by its own thread (that's what makes the gpu so powerful) (technically a workgroup can be multiple threads, but in gpu code I say it's just one)
         updateComputePass.end()
         const updateCommandBuffer = updateEncoder.finish()
         device.queue.submit([updateCommandBuffer]) //actually makes the gpu run code
@@ -262,11 +300,14 @@ async function main() {
         lastUpdatedTexture = (lastUpdatedTexture + 1) % 3 //a new texture has just been updated
 
         // color stuff
+        colorUniformsViews.brightness[0] = document.getElementById("brightness").value
+        device.queue.writeBuffer(colorUniformsBuffer, 0, colorUniformsValues)
         const colorBindGroup = device.createBindGroup({
             layout: colorPipeline.getBindGroupLayout(0),
             entries: [
                 { binding: 0, resource: colorTexture.createView() },
-                { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() }
+                { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() },
+                { binding: 2, resource: { buffer: colorUniformsBuffer } }
             ]
         })
 
@@ -305,6 +346,9 @@ async function main() {
         // -----------------render stuff----------------- //
         renderPassDescriptor.colorAttachments[0].view = context.getCurrentTexture().createView() //set the target of the shader to be the canvas
 
+        renderUniformsViews.isColor[0] = document.getElementById("renderSelect").value=="color" ? 1 : 0
+        device.queue.writeBuffer(renderUniformsBuffer, 0, renderUniformsValues)
+
         const renderEncoder = device.createCommandEncoder({
             label: "wave render command encoder"
         })
@@ -321,6 +365,3 @@ async function main() {
     }
     requestAnimationFrame(render)
 }
-main()
-
-// please move on to see updateWave.wgsl.js

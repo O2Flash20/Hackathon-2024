@@ -27,20 +27,29 @@ struct vertexShaderOutput {
     return output;
 }
 
+struct uniforms {
+    isColor: u32
+}
 
 @group(0) @binding(0) var waveTexture: texture_2d<f32>;
 @group(0) @binding(1) var colorTexture: texture_2d<f32>;
 @group(0) @binding(2) var linearSampler: sampler;
 @group(0) @binding(3) var obstaclesTexture: texture_2d<f32>;
 @group(0) @binding(4) var iorTexture: texture_2d<f32>;
+@group(0) @binding(5) var<uniform> u: uniforms;
 
 @fragment fn fs(i:vertexShaderOutput)->@location(0)vec4f{ //the pixels, just the sum of the wave texture and the obstacles texture (which is black and white)
     let wave = textureSample(waveTexture, linearSampler, i.uv);
     let obstacles = textureSample(obstaclesTexture, linearSampler, i.uv);
     let ior = textureSample(iorTexture, linearSampler, i.uv);
     let lightColor = textureSample(colorTexture, linearSampler, i.uv);
-    // return textureSample(waveTexture, linearSampler, i.uv) + textureSample(obstaclesTexture, linearSampler, i.uv) + ior*ior*ior;
-    return lightColor;
+
+    if (u.isColor == 1) {
+        return lightColor;
+    }
+    else {
+        return wave;
+    }
 }
 
 `
