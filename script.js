@@ -5,7 +5,7 @@ import colorCode from "./shaders/color.wgsl.js"
 import transcribeCode from "./shaders/transcribe.wgsl.js"
 import renderCode from "./shaders/renderWave.wgsl.js"
 
-const numWavelengths = 50;
+const numWavelengths = 5;
 
 // a function to load an external image as a texture
 async function loadTexture(url, device) {

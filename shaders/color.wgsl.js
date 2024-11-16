@@ -3,7 +3,7 @@ export default /*wgsl*/ `
 @group(0) @binding(0) var outputTexture: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1) var waveTexture: texture_3d<f32>;
 
-const numWavelengths = 1;
+const numWavelengths = 5;
 
 fn wavelengthToRgb(wavelength: f32) -> vec3f {
     var r: f32 = 0.0;
