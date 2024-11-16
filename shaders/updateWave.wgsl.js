@@ -59,7 +59,7 @@ const pi = 3.141592653589793438;
     //this pixel is the source of the wave, so force its value to follow a sine wave
     else if (i.x==300 && i.y==0) {
         // let wavelength = ((600-400)*(f32(i.z)*.5)/numWavelengths+400)*0.00003;
-        let wavelength = ((600-400)*(f32(i.z)+.5)/numWavelengths+400)*0.00009;
+        let wavelength = ((700-400)*(f32(i.z)+.5)/numWavelengths+400)*0.00009;
         let frequency = c / (wavelength*ior);
         let t = u.time * dt;
         let theta = u.time * dt * 6.28 * frequency; //gives the wave the wavelength i want

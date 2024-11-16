@@ -49,33 +49,20 @@ fn wavelengthToRgb(wavelength: f32) -> vec3f {
     return vec3f(r, g, b) * intensity;
 }
 
-
-fn wavelengthToHSV (value: f32) -> vec3f {
-    let h = 5.9/6*1e-9*pow(value, 6)-78.8/3*1e-10*pow(value, 5)+ 3917/9*1e-8*pow(value, 4) -11011.1/3*1e-6*pow(value, 3) + 15.08846/9*pow(value, 2)+1191.698/3*value + 38807.3;
-    let v = -27.28/3*1e-12*pow(value, 6)+865.16/3*1e-10*pow(value, 5)-11338.7/3*1e-8*pow(value, 4)+0.07862455/3*pow(value, 3)-10.145934*pow(value, 2)+2080.7553*value-176712.9;
-    return vec3f(h, 1, v);
-}
-
 @compute @workgroup_size(1) fn getIntensity(
     @builtin(global_invocation_id) id:vec3u
 ) {
     let i = id.xy;
     var col = vec3f(0);
     for (var j = u32(0); j < numWavelengths; j++) {
-        let thisWavelength = (600-400)*(f32(j)+.5)/numWavelengths+400;
+        let thisWavelength = (700-400)*(f32(j)+.5)/numWavelengths+400;
         let thisColor = wavelengthToRgb(thisWavelength);
-        // let thisColor = test(thisWavelength);
         let wave = textureLoad(waveTexture, vec3u(i, j), 0).rg;
         let intensity = wave.r*wave.r+wave.g*wave.g;
         col += 1000 * intensity * thisColor / numWavelengths;
     }
 
     textureStore(outputTexture, i, vec4f(col, 0));
-
-
-    // let w = textureLoad(waveTexture, vec3u(i, 0), 0).rg;
-    // let I = 10*(w.r*w.r+w.g*w.g);
-    // textureStore(outputTexture, i, vec4f(I, I, I, 0));
 }
 
 `
