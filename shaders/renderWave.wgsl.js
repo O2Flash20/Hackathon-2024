@@ -38,8 +38,8 @@ struct vertexShaderOutput {
     let wave = textureSample(waveTexture, linearSampler, i.uv);
     let obstacles = textureSample(obstaclesTexture, linearSampler, i.uv);
     let ior = textureSample(iorTexture, linearSampler, i.uv);
-    let lightColor = textureSample(colorTexture, linearSampler, i.uv);
-    // return textureSample(waveTexture, linearSampler, i.uv) + textureSample(obstaclesTexture, linearSampler, i.uv) + ior*ior*ior;
+    let lightColor = textureSample(colorTexture, linearSampler, i.uv) + textureSample(obstaclesTexture, linearSampler, i.uv) + ior*ior*ior;;
+    //return textureSample(waveTexture, linearSampler, i.uv) + textureSample(obstaclesTexture, linearSampler, i.uv) + ior*ior*ior;
     return lightColor;
 }
 
