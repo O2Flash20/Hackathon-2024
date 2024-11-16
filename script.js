@@ -325,7 +325,8 @@ async function main(scene) {
             layout: transcribePipeline.getBindGroupLayout(0),
             entries: [
                 { binding: 0, resource: transcribedWaveTexture.createView() },
-                { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() }
+                { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() },
+                { binding: 2, resource: {buffer:colorUniformsBuffer} }
             ]
         })
 
@@ -346,7 +347,7 @@ async function main(scene) {
         // -----------------render stuff----------------- //
         renderPassDescriptor.colorAttachments[0].view = context.getCurrentTexture().createView() //set the target of the shader to be the canvas
 
-        renderUniformsViews.isColor[0] = document.getElementById("renderSelect").value=="color" ? 1 : 0
+        renderUniformsViews.isColor[0] = document.getElementById("renderSelect").value == "color" ? 1 : 0
         device.queue.writeBuffer(renderUniformsBuffer, 0, renderUniformsValues)
 
         const renderEncoder = device.createCommandEncoder({
