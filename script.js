@@ -4,6 +4,8 @@ import updateCode from "./shaders/updateWave.wgsl.js"
 import transcribeCode from "./shaders/transcribe.wgsl.js"
 import renderCode from "./shaders/renderWave.wgsl.js"
 
+const numWavelengths = 3
+
 // a function to load an external image as a texture
 async function loadTexture(url, device) {
 
@@ -103,8 +105,8 @@ async function main() {
         waveTextures[i] = device.createTexture({
             label: "wave texture " + i,
             format: "rg32float",
-            dimension: "2d",
-            size: [canvas.clientWidth, canvas.clientHeight],
+            dimension: "3d",
+            size: [canvas.clientWidth, canvas.clientHeight, numWavelengths],
             usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING // <- storage binding because it's going to be the output of a compute shader (to do that, it needs to be a storage texture), texture binding because it's going to be the input of another compute shader (to do that it needs to be a regular texture)
         })
     }
@@ -228,7 +230,7 @@ async function main() {
         })
         updateComputePass.setPipeline(updatePipeline)
         updateComputePass.setBindGroup(0, updateBindGroup)
-        updateComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight) //make each pixel be dealt with by its own thread (that's what makes the gpu so powerful) (technically a workgroup can be multiple threads, but in gpu code I say it's just one)
+        updateComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, numWavelengths) //make each pixel be dealt with by its own thread (that's what makes the gpu so powerful) (technically a workgroup can be multiple threads, but in gpu code I say it's just one)
         updateComputePass.end()
         const updateCommandBuffer = updateEncoder.finish()
         device.queue.submit([updateCommandBuffer]) //actually makes the gpu run code
