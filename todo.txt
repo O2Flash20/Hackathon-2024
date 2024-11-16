@@ -1,0 +1,2 @@
+multiple scenes
+    js object, writes shader code and sends it to gpu
