@@ -18,12 +18,30 @@
             <canvas id="mainCanvas" width="600" height="600"></canvas>
         </div>
         <div id="divControl">
-            <select>
-                <option value="doubleSlit">Double Slit</option>
-                <option value="singleSlit">Single Slit</option>
-                <option value="obstacles">Obstacles</option>
-                <option value="rocks">Rocks</option>
-                <option value="laser">Laser</option>
+            <h2>Obstacle Texture</h2>
+            <select id="obstacleSelect">
+                <option value="obstacles/doubleSlit.png">Double Slit</option>
+                <option value="obstacles/flashlight.png">Flashlight</option>
+                <option value="obstacles/none.png">None</option>
+                <option value="obstacles/obstacles.png">Obstacles</option>
+                <option value="obstacles/rocks.png">Rocks</option>
+                <option value="obstacles/singleSlit.png">Single Slit</option>
+                <option value="obstacles/grating.png">Grating</option>
+            </select>
+            <h2>Refraction Texture</h2>
+            <select id="IORSelect">
+                <option value="ior/none.png">None</option>
+                <option value="ior/thinFilm.png">Thin Film</option>
+                <option value="ior/trapezoid.png">Trapezoid</option>
+                <option value="ior/water.png">Water</option>
+            </select>
+            <h2>Emitter Options</h2>
+            <select id="emitterSelect">
+                <option value="singleSource">Single Source</option>
+            </select>
+            <select id="renderSelect">
+                <option value="color">Color Mode</option>
+                <option value="amplitude">Amplitude Mode</option>
             </select>
             <button id="button">Button</button>
         </div>
