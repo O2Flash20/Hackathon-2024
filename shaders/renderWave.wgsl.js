@@ -45,10 +45,10 @@ struct uniforms {
     let lightColor = textureSample(colorTexture, linearSampler, i.uv);
 
     if (u.isColor == 1) {
-        return lightColor;
+        return lightColor+obstacles+ior-vec4f(0.5,0.5,0.5,0);
     }
     else {
-        return wave;
+        return wave+obstacles+ior-vec4f(0.5,0.5,0.5,0);
     }
 }
 

@@ -264,6 +264,7 @@ async function main(scene) {
         }
 
         frameCount++
+        document.getElementById("frameCount").innerHTML = (frameCount*0.36).toFixed(1)+"fs";
 
         // -----------------update stuff----------------- //
         updateUniformsViews.time[0] = frameCount
