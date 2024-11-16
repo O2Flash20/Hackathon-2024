@@ -77,8 +77,7 @@ fn sampleRebound(texture: texture_2d<f32>, pos: vec2i) -> f32 {
 
     // if it's not an obstacle or the source, we have to figure out what its new value should be while satisfying the wave equation
     else {
-        let beforeLastValue = sampleRebound(beforeLastTexture, i);
-
+        let beforeLastValue = textureLoad(beforeLastTexture, i, 0);
         let lastValue = textureLoad(lastTexture, i, 0);
         let lastValueRight = textureLoad(lastTexture, i + vec2i(1, 0), 0);
         let lastValueLeft = textureLoad(lastTexture, i + vec2i(-1, 0), 0);
@@ -89,10 +88,6 @@ fn sampleRebound(texture: texture_2d<f32>, pos: vec2i) -> f32 {
         var nextValue = 2*lastValue - beforeLastValue 
         + pow(v*dt/dx, 2)*(lastValueRight - 2*lastValue + lastValueLeft)
         + pow(v*dt/dy, 2)*(lastValueTop - 2*lastValue + lastValueBottom);
-
-        // nextValue.rg = clamp(nextValue.rg, vec2f(-10, 10), vec2f(10, 10));
-        nextValue.r = clamp(nextValue.r, -10, 10);
-        nextValue.g = clamp(nextValue.g, -10, 10);
 
         // !might be able to remove the 0.999
         textureStore(outputTexture, i, vec4f(nextValue.r*0.999, nextValue.g*0.999, 0, 0)); //i multiply by a bit less than 1 because it would get too crazy otherwise as the wave rebounds and adds up
