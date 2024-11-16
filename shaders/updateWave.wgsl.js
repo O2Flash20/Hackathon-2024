@@ -15,7 +15,7 @@ struct uniforms {
 @group(0) @binding(4) var obstaclesTexture: texture_2d<f32>;
 @group(0) @binding(5) var iorTexture: texture_2d<f32>;
 
-const numWavelengths = 50;
+const numWavelengths = 1;
 
 const c = 299792458.; //the speed of light
 const dt = 0.000000000004; //the time between each frame
