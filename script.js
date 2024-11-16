@@ -94,8 +94,8 @@ async function main() {
         compute: { module: updateModule } //use the code for updating
     })
 
-    const obstaclesTexture = await loadTexture("laser.png", device) //load an image as the obstacles, you can try the other images here
-    const iorTexture = await loadTexture("IOR.png", device) //image storing ior data
+    const obstaclesTexture = await loadTexture("doubleSlit.png", device) //load an image as the obstacles, you can try the other images here
+    const iorTexture = await loadTexture("vacuumIOR.png", device) //image storing ior data
 
     // to do the simulation (to approximate a second derivative), I need to store 3 frames: this one, the last one, and the before-last one
     // so I have an array of 3 and cycle through them, keeping track of which is the most recent
