@@ -32,6 +32,7 @@
 body {
     background-color: rgb(40, 43, 43);
     margin:5px;
+    font-family: Arial, Helvetica, sans-serif
 }
 button {
     margin:5px;
@@ -45,6 +46,11 @@ select {
     height: 40px;
     width: 50%;
     background-color: lightgrey;
+}
+h2 {
+    color:white;
+    text-shadow: 1px 1px 2px black;
+    margin:0;
 }
 button {
     margin:5px;
