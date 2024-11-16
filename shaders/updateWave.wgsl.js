@@ -15,6 +15,8 @@ struct uniforms {
 @group(0) @binding(4) var obstaclesTexture: texture_2d<f32>;
 @group(0) @binding(5) var iorTexture: texture_2d<f32>;
 
+const numWavelengths = 50;
+
 const c = 299792458.; //the speed of light
 const dt = 0.000000000004; //the time between each frame
 const dx = 0.003; //each pixel is 3mm apart
@@ -51,6 +53,9 @@ const pi = 3.141592653589793438;
         textureStore(outputTexture, i, vec4f(0));*/
     }
     //this pixel is the source of the wave, so force its value to follow a sine wave
+    else if (i.x==300 && i.y==0) {
+        // let wavelength = ((600-400)*(f32(i.z)*.5)/numWavelengths+400)*0.00003;
+        let wavelength = ((700-400)*(f32(i.z)+.5)/numWavelengths+400)*0.00009;
     else if (i.x==300 && i.y==5) {
         let wavelength = ((600-400)*(f32(i.z)*.5)/3+400)*0.0001;
         let frequency = c / (wavelength*ior);
