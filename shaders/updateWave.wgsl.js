@@ -53,11 +53,8 @@ const pi = 3.141592653589793438;
         textureStore(outputTexture, i, vec4f(0));*/
     }
     //this pixel is the source of the wave, so force its value to follow a sine wave
-    else if (i.x==300 && i.y==0) {
-        // let wavelength = ((600-400)*(f32(i.z)*.5)/numWavelengths+400)*0.00003;
+    else if (i.x==300 && i.y==1) {
         let wavelength = ((700-400)*(f32(i.z)+.5)/numWavelengths+400)*0.00009;
-    else if (i.x==300 && i.y==5) {
-        let wavelength = ((600-400)*(f32(i.z)*.5)/3+400)*0.0001;
         let frequency = c / (wavelength*ior);
         let t = u.time * dt;
         let theta = u.time * dt * 6.28 * frequency; //gives the wave the wavelength i want
