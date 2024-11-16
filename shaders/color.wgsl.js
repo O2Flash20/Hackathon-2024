@@ -59,7 +59,7 @@ fn wavelengthToRgb(wavelength: f32) -> vec3f {
         let thisColor = wavelengthToRgb(thisWavelength);
         let wave = textureLoad(waveTexture, vec3u(i, j), 0).rg;
         let intensity = wave.r*wave.r+wave.g*wave.g;
-        col += 1000 * intensity * thisColor / numWavelengths;
+        col += 100000 * intensity * thisColor / numWavelengths;
     }
 
     textureStore(outputTexture, i, vec4f(col, 0));

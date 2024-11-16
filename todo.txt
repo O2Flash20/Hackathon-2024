@@ -1,4 +1,14 @@
 multiple scenes
     js object, writes shader code and sends it to gpu
     absorption
-    
+
+
+loaded on start:
+    scene: loaded on start
+        obstacles texture
+        ior texture
+        emitter: point or direction, point location
+    number of wavelengths to simulate
+
+real time:
+    switch between wave & light
