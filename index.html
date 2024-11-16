@@ -8,7 +8,7 @@
     <meta name="description" content="A wave simulation using fancy physics.">
     <link rel="stylesheet" href="style.css">
     <!-- this has to have type module so that you can import things -->
-    <script src="script.js" type="module"></script>
+    <script src="script.js" type="module" defer></script>
 </head>
 
 <body>
@@ -21,9 +21,9 @@
         <div id="divControl">
             <h2>Obstacle Texture</h2>
             <select id="obstacleSelect">
+                <option value="obstacles/none.png">None</option>
                 <option value="obstacles/doubleSlit.png">Double Slit</option>
                 <option value="obstacles/flashlight.png">Flashlight</option>
-                <option value="obstacles/none.png">None</option>
                 <option value="obstacles/obstacles.png">Obstacles</option>
                 <option value="obstacles/rocks.png">Rocks</option>
                 <option value="obstacles/singleSlit.png">Single Slit</option>
@@ -38,14 +38,19 @@
             </select>
             <h2>Emitter Options</h2>
             <select id="emitterSelect">
-                <option value="singleSource">Single Source</option>
+                <option value="point">Single Source</option>
+                <option value="direction">Direction Source</option>
             </select>
+            <h2>Number of Wavelength</h2>
+            <input type="number" min="1" max="50" step="1" value="10" id="numWavelengths">
+            <br><br>
+            <button id="startButton">Start</button>
+            <br>
             <select id="renderSelect">
                 <option value="color">Color Mode</option>
-                <option value="amplitude">Amplitude Mode</option>
+                <option value="wave">Wave Mode</option>
             </select>
-            <button id="button">Button</button>
-            
+            <input id="brightness" type="number" min="0" max="10000" value="100">
         </div>
     </div>
 </body>

@@ -1,9 +1,14 @@
 export default /*wgsl*/ `
 
+struct uniforms {
+    brightness: f32
+}
+
 @group(0) @binding(0) var outputTexture: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(1) var waveTexture: texture_3d<f32>;
+@group(0) @binding(2) var<uniform> u: uniforms;
 
-const numWavelengths = 5;
+_NUMWAVELENGTHS
 
 fn wavelengthToRgb(wavelength: f32) -> vec3f {
     var r: f32 = 0.0;
@@ -49,6 +54,18 @@ fn wavelengthToRgb(wavelength: f32) -> vec3f {
     return vec3f(r, g, b) * intensity;
 }
 
+fn f(x: f32) -> f32 {
+    return x/(x+1);
+}
+
+fn tonemap(col: vec3f) -> vec3f {
+    return vec3f(
+        f(col.r),
+        f(col.g),
+        f(col.b)
+    );
+}
+
 @compute @workgroup_size(1) fn getIntensity(
     @builtin(global_invocation_id) id:vec3u
 ) {
@@ -59,10 +76,10 @@ fn wavelengthToRgb(wavelength: f32) -> vec3f {
         let thisColor = wavelengthToRgb(thisWavelength);
         let wave = textureLoad(waveTexture, vec3u(i, j), 0).rg;
         let intensity = wave.r*wave.r+wave.g*wave.g;
-        col += 100000 * intensity * thisColor / numWavelengths;
+        col += u.brightness * intensity * thisColor / numWavelengths;
     }
 
-    textureStore(outputTexture, i, vec4f(col, 0));
+    textureStore(outputTexture, i, vec4f(tonemap(col), 1));
 }
 
 `
