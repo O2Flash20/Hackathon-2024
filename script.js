@@ -418,43 +418,43 @@ async function main(scene) {
         device.queue.submit([transcribeCommandBuffer])
 
         // -----------------theta stuff-----------------
-        const thetaBindGroup = device.createBindGroup({
-            layout: thetaPipeline.getBindGroupLayout(0),
-            entries: [
-                { binding: 0, resource: thetaTexture.createView() },
-                { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() }
-            ]
-        })
+        // const thetaBindGroup = device.createBindGroup({
+        //     layout: thetaPipeline.getBindGroupLayout(0),
+        //     entries: [
+        //         { binding: 0, resource: thetaTexture.createView() },
+        //         { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() }
+        //     ]
+        // })
 
-        const thetaEncoder = device.createCommandEncoder()
-        const thetaComputePass = thetaEncoder.beginComputePass()
-        thetaComputePass.setPipeline(thetaPipeline)
-        thetaComputePass.setBindGroup(0, thetaBindGroup)
-        thetaComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, scene.numWavelengths)
-        thetaComputePass.end()
-        const thetaCommandBuffer = thetaEncoder.finish()
-        device.queue.submit([thetaCommandBuffer])
+        // const thetaEncoder = device.createCommandEncoder()
+        // const thetaComputePass = thetaEncoder.beginComputePass()
+        // thetaComputePass.setPipeline(thetaPipeline)
+        // thetaComputePass.setBindGroup(0, thetaBindGroup)
+        // thetaComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, scene.numWavelengths)
+        // thetaComputePass.end()
+        // const thetaCommandBuffer = thetaEncoder.finish()
+        // device.queue.submit([thetaCommandBuffer])
 
-        // -----------------prop stuff----------------- //
+        // // -----------------prop stuff----------------- //
 
-        const propEncoder = device.createCommandEncoder()
-        const propComputePass = propEncoder.beginComputePass()
-        propComputePass.setPipeline(propPipeline)
-        propComputePass.setBindGroup(0, propBindGroup)
-        propComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, scene.numWavelengths)
-        propComputePass.end()
-        const propCommandBuffer = propEncoder.finish()
-        device.queue.submit([propCommandBuffer])
+        // const propEncoder = device.createCommandEncoder()
+        // const propComputePass = propEncoder.beginComputePass()
+        // propComputePass.setPipeline(propPipeline)
+        // propComputePass.setBindGroup(0, propBindGroup)
+        // propComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, scene.numWavelengths)
+        // propComputePass.end()
+        // const propCommandBuffer = propEncoder.finish()
+        // device.queue.submit([propCommandBuffer])
 
-        //  -----------------display prop stuff----------------- //
-        const displayPropEncoder = device.createCommandEncoder()
-        const displayPropComputePass = displayPropEncoder.beginComputePass()
-        displayPropComputePass.setPipeline(displayPropPipeline)
-        displayPropComputePass.setBindGroup(0, displayPropBindGroup)
-        displayPropComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight)
-        displayPropComputePass.end()
-        const displayPropCommandBuffer = displayPropEncoder.finish()
-        device.queue.submit([displayPropCommandBuffer])
+        // //  -----------------display prop stuff----------------- //
+        // const displayPropEncoder = device.createCommandEncoder()
+        // const displayPropComputePass = displayPropEncoder.beginComputePass()
+        // displayPropComputePass.setPipeline(displayPropPipeline)
+        // displayPropComputePass.setBindGroup(0, displayPropBindGroup)
+        // displayPropComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight)
+        // displayPropComputePass.end()
+        // const displayPropCommandBuffer = displayPropEncoder.finish()
+        // device.queue.submit([displayPropCommandBuffer])
 
         // -----------------render stuff----------------- //
         renderPassDescriptor.colorAttachments[0].view = context.getCurrentTexture().createView() //set the target of the shader to be the canvas

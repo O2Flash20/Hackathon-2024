@@ -50,7 +50,8 @@ struct uniforms {
         return wave+obstacles+ior-vec4f(0.5,0.5,0.5,0);
     }
     else if (u.renderMode == 1) {
-        return lightColor+obstacles+ior-vec4f(0.5,0.5,0.5,0);
+        let iorCol = ior-vec4f(0.5,0.5,0.5,0);
+        return lightColor+obstacles+iorCol*iorCol*iorCol;
     }
     else {
         return prop;
