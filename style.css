@@ -57,7 +57,7 @@
 body {
     background-color: rgb(40, 43, 43);
     margin:5px;
-    font-family: Arial, Helvetica, sans-serif
+    font-family: "Rubik", sans-serif;
 }
 select {
     margin:5px;
@@ -94,10 +94,10 @@ button {
     border-width: 2px;
     border-style: solid;
     background-color: lightgrey;
-    width: 100%;
+    width: 95%;
     background-color:rgb(85, 85, 255);
-    box-shadow: 0px 0px 5px black;
-    font-size:xx-large;
+    box-shadow: 2px 2px 5px black;
+    font-size:x-large;
     color:white;
 }
 button:active {
@@ -109,5 +109,5 @@ button:active {
     font-size:large;
 }
 #numWavelengths {
-
+    width: 90%;
 }

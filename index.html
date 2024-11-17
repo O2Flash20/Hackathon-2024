@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="style.css">
     <!-- this has to have type module so that you can import things -->
     <script src="script.js" type="module" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
@@ -25,7 +29,12 @@
                 <select id="obstacleSelect">
                     <option value="obstacles/none.png">None</option>
                     <option value="obstacles/doubleSlit.png">Double Slit</option>
+                    <option value="obstacles/ellipse.png">Ellipse</option>
                     <option value="obstacles/flashlight.png">Flashlight</option>
+                    <option value="obstacles/fractal.png">Fractal</option>
+                    <option value="obstacles/maze.png">Maze</option>
+                    <option value="obstacles/mirror.png">Mirror</option>
+                    <option value="obstacles/parabolic.png">Parabolic</option>
                     <option value="obstacles/obstacles.png">Obstacles</option>
                     <option value="obstacles/rocks.png">Rocks</option>
                     <option value="obstacles/singleSlit.png">Single Slit</option>
@@ -34,6 +43,8 @@
                 <h3>Refraction Texture</h3>
                 <select id="IORSelect">
                     <option value="ior/none.png">None</option>
+                    <option value="ior/lens.png">Lens</option>
+                    <option value="ior/sphere.png">Sphere</option>
                     <option value="ior/thinFilm.png">Thin Film</option>
                     <option value="ior/trapezoid.png">Trapezoid</option>
                     <option value="ior/water.png">Water</option>
@@ -42,10 +53,11 @@
                 <select id="emitterSelect">
                     <option value="point">Single Source</option>
                     <option value="direction">Direction Source</option>
+                    <option value="center">Center Source</option>
                 </select>
                 <h3>Number of Wavelengths</h3>
                 <span id="waveLengthDisplay">10</span><input type="range" min="1" max="75" step="1" value="10" id="numWavelengths" oninput="document.getElementById('waveLengthDisplay').innerHTML = document.getElementById('numWavelengths').value">
-                <button id="startButton">RESET</button>
+                <button id="startButton"><b style="text-shadow: 2px 2px 5px black;;">RESET</b></button>
             </div>
             <div id="controlMiddle">
                 <h2>Real Time Settings</h2>
