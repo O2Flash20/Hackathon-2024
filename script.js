@@ -3,6 +3,9 @@
 import updateCode from "./shaders/updateWave.wgsl.js"
 import colorCode from "./shaders/color.wgsl.js"
 import transcribeCode from "./shaders/transcribe.wgsl.js"
+import thetaCode from "./shaders/theta.wgsl.js"
+import propCode from "./shaders/prop.wgsl.js"
+import displayPropCode from "./shaders/displayProp.wgsl.js"
 import renderCode from "./shaders/renderWave.wgsl.js"
 
 let shouldStop = false
@@ -198,6 +201,73 @@ async function main(scene) {
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
     })
 
+    // -----------------theta setup----------------- //
+    const thetaModule = device.createShaderModule({
+        code: thetaCode
+    })
+
+    const thetaPipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: thetaModule }
+    })
+
+    const thetaTexture = device.createTexture({
+        format: "r32float",
+        dimension: "3d",
+        size: [canvas.clientWidth, canvas.clientHeight, scene.numWavelengths],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
+    })
+
+    // -----------------prop(agation) setup-----------------//
+    const propModule = device.createShaderModule({
+        code: propCode
+    })
+
+    const propPipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: propModule }
+    })
+
+    const propTexture = device.createTexture({
+        format: "rg32float",
+        dimension: "3d",
+        size: [canvas.clientWidth, canvas.clientHeight, scene.numWavelengths],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
+    })
+
+    const propBindGroup = device.createBindGroup({
+        layout: propPipeline.getBindGroupLayout(0),
+        entries: [
+            { binding: 0, resource: propTexture.createView() },
+            { binding: 1, resource: thetaTexture.createView() }
+        ]
+    })
+
+    // -----------------display prop setup-----------------//
+    const displayPropModule = device.createShaderModule({
+        code: displayPropCode
+    })
+
+    const displayPropPipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: displayPropModule }
+    })
+
+    const displayPropTexture = device.createTexture({
+        format: "rgba8unorm",
+        dimension: "2d",
+        size: [canvas.clientWidth, canvas.clientHeight],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
+    })
+
+    const displayPropBindGroup = device.createBindGroup({
+        layout: displayPropPipeline.getBindGroupLayout(0),
+        entries: [
+            { binding: 0, resource: displayPropTexture.createView() },
+            { binding: 1, resource: propTexture.createView() }
+        ]
+    })
+
     // -----------------render setup----------------- //
     // to get the texture on the screen, we need a third shader because compute shaders can't write to a canvas
 
@@ -224,10 +294,10 @@ async function main(scene) {
     })
     const renderUniformsValues = new ArrayBuffer(4)
     const renderUniformsViews = {
-        isColor: new Int32Array(renderUniformsValues),
+        renderMode: new Int32Array(renderUniformsValues),
     }
     // setting the initial values of the uniforms
-    renderUniformsViews.isColor[0] = 1
+    renderUniformsViews.renderMode[0] = 1
 
     // for the other shaders, the bind group is set each frame because it changes. this one can just be done once at the beginning
     // this is what the gpu gets sent from the cpu
@@ -239,7 +309,8 @@ async function main(scene) {
             { binding: 2, resource: linearSampler }, //<- a sampler, telling the shader how to sample the texture
             { binding: 3, resource: obstaclesTexture.createView() }, //<- the texture containing the obstacles, because I want to overlay the obstacles on top of the wave
             { binding: 4, resource: iorTexture.createView() },
-            { binding: 5, resource: { buffer: renderUniformsBuffer } }
+            { binding: 5, resource: displayPropTexture.createView() },
+            { binding: 6, resource: { buffer: renderUniformsBuffer } },
         ]
     })
 
@@ -264,7 +335,7 @@ async function main(scene) {
         }
 
         frameCount++
-        document.getElementById("frameCount").innerHTML = (frameCount*0.065).toFixed(1)+"fs";
+        document.getElementById("frameCount").innerHTML = (frameCount * 0.065).toFixed(1) + "fs"
 
         // -----------------update stuff----------------- //
         updateUniformsViews.time[0] = frameCount
@@ -300,7 +371,7 @@ async function main(scene) {
 
         lastUpdatedTexture = (lastUpdatedTexture + 1) % 3 //a new texture has just been updated
 
-        // color stuff
+        // -----------------color stuff-----------------
         colorUniformsViews.brightness[0] = document.getElementById("brightness").value
         device.queue.writeBuffer(colorUniformsBuffer, 0, colorUniformsValues)
         const colorBindGroup = device.createBindGroup({
@@ -327,7 +398,7 @@ async function main(scene) {
             entries: [
                 { binding: 0, resource: transcribedWaveTexture.createView() },
                 { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() },
-                { binding: 2, resource: {buffer:colorUniformsBuffer} }
+                { binding: 2, resource: { buffer: colorUniformsBuffer } }
             ]
         })
 
@@ -344,11 +415,58 @@ async function main(scene) {
         const transcribeCommandBuffer = transcribeEncoder.finish()
         device.queue.submit([transcribeCommandBuffer])
 
+        // -----------------theta stuff-----------------
+        const thetaBindGroup = device.createBindGroup({
+            layout: thetaPipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: thetaTexture.createView() },
+                { binding: 1, resource: waveTextures[lastUpdatedTexture].createView() }
+            ]
+        })
+
+        const thetaEncoder = device.createCommandEncoder()
+        const thetaComputePass = thetaEncoder.beginComputePass()
+        thetaComputePass.setPipeline(thetaPipeline)
+        thetaComputePass.setBindGroup(0, thetaBindGroup)
+        thetaComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, scene.numWavelengths)
+        thetaComputePass.end()
+        const thetaCommandBuffer = thetaEncoder.finish()
+        device.queue.submit([thetaCommandBuffer])
+
+        // -----------------prop stuff----------------- //
+
+        const propEncoder = device.createCommandEncoder()
+        const propComputePass = propEncoder.beginComputePass()
+        propComputePass.setPipeline(propPipeline)
+        propComputePass.setBindGroup(0, propBindGroup)
+        propComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight, scene.numWavelengths)
+        propComputePass.end()
+        const propCommandBuffer = propEncoder.finish()
+        device.queue.submit([propCommandBuffer])
+
+        //  -----------------display prop stuff----------------- //
+        const displayPropEncoder = device.createCommandEncoder()
+        const displayPropComputePass = displayPropEncoder.beginComputePass()
+        displayPropComputePass.setPipeline(displayPropPipeline)
+        displayPropComputePass.setBindGroup(0, displayPropBindGroup)
+        displayPropComputePass.dispatchWorkgroups(canvas.clientWidth, canvas.clientHeight)
+        displayPropComputePass.end()
+        const displayPropCommandBuffer = displayPropEncoder.finish()
+        device.queue.submit([displayPropCommandBuffer])
 
         // -----------------render stuff----------------- //
         renderPassDescriptor.colorAttachments[0].view = context.getCurrentTexture().createView() //set the target of the shader to be the canvas
 
-        renderUniformsViews.isColor[0] = document.getElementById("renderSelect").value == "color" ? 1 : 0
+        const renderMode = document.getElementById("renderSelect").value
+        if (renderMode == "wave"){
+            renderUniformsViews.renderMode[0] = 0
+        }
+        else if (renderMode =="color"){
+            renderUniformsViews.renderMode[0] = 1
+        }
+        else if (renderMode == "direction"){
+            renderUniformsViews.renderMode[0] = 2
+        }
         device.queue.writeBuffer(renderUniformsBuffer, 0, renderUniformsValues)
 
         const renderEncoder = device.createCommandEncoder({
