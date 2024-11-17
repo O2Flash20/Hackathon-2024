@@ -19,39 +19,48 @@
             <img id="scale" src="scale.png">
         </div>
         <div id="divControl">
-            <h2>Obstacle Texture</h2>
-            <select id="obstacleSelect">
-                <option value="obstacles/none.png">None</option>
-                <option value="obstacles/doubleSlit.png">Double Slit</option>
-                <option value="obstacles/flashlight.png">Flashlight</option>
-                <option value="obstacles/obstacles.png">Obstacles</option>
-                <option value="obstacles/rocks.png">Rocks</option>
-                <option value="obstacles/singleSlit.png">Single Slit</option>
-                <option value="obstacles/grating.png">Grating</option>
-            </select>
-            <h2>Refraction Texture</h2>
-            <select id="IORSelect">
-                <option value="ior/none.png">None</option>
-                <option value="ior/thinFilm.png">Thin Film</option>
-                <option value="ior/trapezoid.png">Trapezoid</option>
-                <option value="ior/water.png">Water</option>
-            </select>
-            <h2>Emitter Options</h2>
-            <select id="emitterSelect">
-                <option value="point">Single Source</option>
-                <option value="direction">Direction Source</option>
-            </select>
-            <h2>Number of Wavelengths</h2>
-            <span id="waveLengthDisplay"></span><input type="range" min="1" max="75" step="1" value="10" id="numWavelengths">
-            <br>
-            <button id="startButton">Start</button>
-            <br>
-            <select id="renderSelect">
-                <option value="color">Color Mode</option>
-                <option value="wave">Wave Mode</option>
-            </select>
-            <h2 id="frameCount"></h2>
-            <input id="brightness" type="number" min="0" max="10000" value="100">
+            <div id="controlTop">
+                <h2>Setup Options</h2>
+                <h3>Obstacle Texture</h3>
+                <select id="obstacleSelect">
+                    <option value="obstacles/none.png">None</option>
+                    <option value="obstacles/doubleSlit.png">Double Slit</option>
+                    <option value="obstacles/flashlight.png">Flashlight</option>
+                    <option value="obstacles/obstacles.png">Obstacles</option>
+                    <option value="obstacles/rocks.png">Rocks</option>
+                    <option value="obstacles/singleSlit.png">Single Slit</option>
+                    <option value="obstacles/grating.png">Grating</option>
+                </select>
+                <h3>Refraction Texture</h3>
+                <select id="IORSelect">
+                    <option value="ior/none.png">None</option>
+                    <option value="ior/thinFilm.png">Thin Film</option>
+                    <option value="ior/trapezoid.png">Trapezoid</option>
+                    <option value="ior/water.png">Water</option>
+                </select>
+                <h3>Emitter Options</h3>
+                <select id="emitterSelect">
+                    <option value="point">Single Source</option>
+                    <option value="direction">Direction Source</option>
+                </select>
+                <h3>Number of Wavelengths</h3>
+                <span id="waveLengthDisplay">10</span><input type="range" min="1" max="75" step="1" value="10" id="numWavelengths" oninput="document.getElementById('waveLengthDisplay').innerHTML = document.getElementById('numWavelengths').value">
+                <button id="startButton">RESET</button>
+            </div>
+            <div id="controlMiddle">
+                <h2>Real Time Settings</h2>
+                <h3>Render</h3>
+                <select id="renderSelect">
+                    <option value="color">Color Mode</option>
+                    <option value="wave">Wave Mode</option>
+                    <option value="direction">Direction Mode</option>
+                </select>
+                <h3>Brightness</h3>
+                <input id="brightness" type="number" min="0" max="10000" value="100">
+            </div>
+            <div id="controlBottom">
+                <h3 id="frameCount"></h3>  
+            </div> 
         </div>
     </div>
 </body>

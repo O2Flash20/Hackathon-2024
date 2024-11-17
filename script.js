@@ -27,8 +27,7 @@ async function start(device) {
     else if (emitterType == "direction") {
         emitterCode = `else if (i.y==1) {`
     }
-    let numWavelengths = Number(document.getElementById("numWavelengths").value)
-    document.getElementById("waveLengthDisplay").innerHTML = numWavelengths;
+    let numWavelengths = Number(document.getElementById("numWavelengths").value);
     main({ obstacleTexture, iorTexture, emitterCode, numWavelengths })
 }
 
@@ -264,7 +263,7 @@ async function main(scene) {
         }
 
         frameCount++
-        document.getElementById("frameCount").innerHTML = (frameCount*0.065).toFixed(1)+"fs";
+        document.getElementById("frameCount").innerHTML = "Time Elapsed: " + (frameCount*0.065).toFixed(1)+"fs";
 
         // -----------------update stuff----------------- //
         updateUniformsViews.time[0] = frameCount
