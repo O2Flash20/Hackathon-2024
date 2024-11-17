@@ -19,7 +19,7 @@ const c = 299792458.; //the speed of light
 const dt = 0.000000000004; //the time between each frame
 const dx = 0.003; //each pixel is 3mm apart
 const dy = 0.003;
-const reflective = true;
+const reflective = false;
 const pi = 3.141592653589793438;
 
 // const wavelength = 0.015; //we want waves with a wavelength of 1.5cm
@@ -71,21 +71,21 @@ const pi = 3.141592653589793438;
         var lastValueTop = textureLoad(lastTexture, i + vec3i(0, 1, 0), 0);
         var lastValueBottom = textureLoad(lastTexture, i + vec3i(0, -1, 0), 0);
 
-        if (textureLoad(obstaclesTexture, i.xy+vec2i(1, 0), 0).r == 1 || i.x == 600) {
+        if (textureLoad(obstaclesTexture, i.xy+vec2i(1, 0), 0).r == 1 || i.x == 599) {
             if (reflective==true) {lastValueRight = vec4f(0);}
-            //else {lastValueRight = vec4f(lastValue.r,lastValue.g,0,0);}
+            else {lastValueRight = vec4f(lastValue.r,lastValue.g,0,0);}
         }
         if (textureLoad(obstaclesTexture, i.xy+vec2i(-1, 0), 0).r == 1 || i.x == 0) {
             if (reflective==true) {lastValueLeft = vec4f(0);}
-            //else {lastValueLeft = vec4f(lastValue.r,lastValue.g,0,0);}
+            else {lastValueLeft = vec4f(lastValue.r,lastValue.g,0,0);}
         }
         if (textureLoad(obstaclesTexture, i.xy+vec2i(0, 1), 0).r == 1 || i.y == 0) {
             if (reflective==true) {lastValueTop = vec4f(0);}
-            //else {}
+            else {lastValueTop = vec4f(lastValue.r,lastValue.g,0,0);}
         }
         if (textureLoad(obstaclesTexture, i.xy+vec2i(0, -1), 0).r == 1 || i.y == 599) {
             if (reflective==true) {lastValueBottom = vec4f(0);}
-            //else {}
+            else {lastValueBottom = vec4f(lastValue.r,lastValue.g,0,0);}
         }
 
 

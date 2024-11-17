@@ -28,7 +28,7 @@ async function start(device) {
         emitterCode = `else if (i.y==1) {`
     }
     let numWavelengths = Number(document.getElementById("numWavelengths").value)
-
+    document.getElementById("waveLengthDisplay").innerHTML = numWavelengths;
     main({ obstacleTexture, iorTexture, emitterCode, numWavelengths })
 }
 
