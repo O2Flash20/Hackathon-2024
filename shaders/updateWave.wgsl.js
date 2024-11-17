@@ -12,18 +12,16 @@ struct uniforms {
 @group(0) @binding(3) var beforeLastTexture: texture_3d<f32>;
 @group(0) @binding(4) var obstaclesTexture: texture_2d<f32>;
 @group(0) @binding(5) var iorTexture: texture_2d<f32>;
+// @group(0) @binding(6) var propTexture: texture_3d<f32>;
 
 _NUMWAVELENGTHS
 
 const c = 299792458.; //the speed of light
 const dt = 0.000000000004; //the time between each frame
-const dx = 0.003; //each pixel is 3mm apart
+const dx = 0.003;
 const dy = 0.003;
 const reflective = false;
 const pi = 3.141592653589793438;
-
-// const wavelength = 0.015; //we want waves with a wavelength of 1.5cm
-// const frequency = c / wavelength; //so we need to drive a specific frequency to get that
 
 @compute @workgroup_size(1) fn updateWave( //@workgroup_size(1) means one thread per workgroup (and i already set one workgroup per pixel); because it has the tag @compute, the shader knows to start here
     @builtin(global_invocation_id) id:vec3<u32> //this workgroup knows which one it is
@@ -53,7 +51,6 @@ const pi = 3.141592653589793438;
 
     //this pixel is the source of the wave, so force its value to follow a sine wave
     _EMITTER
-    // else if (i.x==300 && i.y==1) {
         let wavelength = ((700-400)*(f32(i.z)+.5)/numWavelengths+400)*0.00009;
         let frequency = c / (wavelength*ior);
         let t = u.time * dt;
@@ -73,19 +70,36 @@ const pi = 3.141592653589793438;
 
         if (textureLoad(obstaclesTexture, i.xy+vec2i(1, 0), 0).r == 1 || i.x == 599) {
             if (reflective==true) {lastValueRight = vec4f(0);}
-            else {lastValueRight = vec4f(lastValue.r,lastValue.g,0,0);}
+            else {
+                // let dirRight = -textureLoad(propTexture, i, 0).rg;
+                // var sampleY = dirRight.y * (-1.)/dirRight.x;
+                // if (sampleY != sampleY){
+                //     sampleY = 0.;
+                // }
+                // let mixAmount = sampleY%1.;
+                // lastValueRight =
+                //     mixAmount     * textureLoad(lastTexture, clamp(i + vec3i(-1, i32(floor(sampleY)), 0), vec3i(0, 0, 0), vec3i(599, 599, 100)), 0) + 
+                //     (1-mixAmount) * textureLoad(lastTexture, clamp(i + vec3i(-1, i32(ceil(sampleY)), 0), vec3i(0, 0, 0), vec3i(599, 599, 100)), 0);
+                lastValueRight = vec4f(lastValue.r, lastValue.g, 0, 0);
+            }
         }
         if (textureLoad(obstaclesTexture, i.xy+vec2i(-1, 0), 0).r == 1 || i.x == 0) {
             if (reflective==true) {lastValueLeft = vec4f(0);}
-            else {lastValueLeft = vec4f(lastValue.r,lastValue.g,0,0);}
+            else {
+                lastValueLeft = vec4f(lastValue.r,lastValue.g,0,0);
+            }
         }
         if (textureLoad(obstaclesTexture, i.xy+vec2i(0, 1), 0).r == 1 || i.y == 0) {
             if (reflective==true) {lastValueTop = vec4f(0);}
-            else {lastValueTop = vec4f(lastValue.r,lastValue.g,0,0);}
+            else {
+                lastValueTop = vec4f(lastValue.r,lastValue.g,0,0);
+            }
         }
         if (textureLoad(obstaclesTexture, i.xy+vec2i(0, -1), 0).r == 1 || i.y == 599) {
             if (reflective==true) {lastValueBottom = vec4f(0);}
-            else {lastValueBottom = vec4f(lastValue.r,lastValue.g,0,0);}
+            else {
+                lastValueBottom = vec4f(lastValue.r,lastValue.g,0,0);
+            }
         }
 
 

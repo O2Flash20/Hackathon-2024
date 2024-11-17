@@ -30,7 +30,10 @@ async function start(device) {
     else if (emitterType == "direction") {
         emitterCode = `else if (i.y==1) {`
     }
-    let numWavelengths = Number(document.getElementById("numWavelengths").value);
+    else if (emitterType == "center") {
+        emitterCode = `else if (i.y == 300 && i.x == 300) {`
+    }
+    let numWavelengths = Number(document.getElementById("numWavelengths").value)
     main({ obstacleTexture, iorTexture, emitterCode, numWavelengths })
 }
 
@@ -99,7 +102,48 @@ async function main(scene) {
         mipmapFilter: "linear",
     })
 
-    // I have 3 separate shaders in this simulation, the first one updates the raw values in the field making the wave
+    // -----------------theta setup----------------- //
+    const thetaModule = device.createShaderModule({
+        code: thetaCode
+    })
+
+    const thetaPipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: thetaModule }
+    })
+
+    const thetaTexture = device.createTexture({
+        format: "r32float",
+        dimension: "3d",
+        size: [canvas.clientWidth, canvas.clientHeight, scene.numWavelengths],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
+    })
+
+    // -----------------prop(agation) setup-----------------//
+    const propModule = device.createShaderModule({
+        code: propCode
+    })
+
+    const propPipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: { module: propModule }
+    })
+
+    const propTexture = device.createTexture({
+        format: "rg32float",
+        dimension: "3d",
+        size: [canvas.clientWidth, canvas.clientHeight, scene.numWavelengths],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
+    })
+
+    const propBindGroup = device.createBindGroup({
+        layout: propPipeline.getBindGroupLayout(0),
+        entries: [
+            { binding: 0, resource: propTexture.createView() },
+            { binding: 1, resource: thetaTexture.createView() },
+            { binding: 2, resource: scene.obstacleTexture.createView() }
+        ]
+    })
 
     // -----------------update setup----------------- //
 
@@ -200,48 +244,6 @@ async function main(scene) {
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
     })
 
-    // -----------------theta setup----------------- //
-    const thetaModule = device.createShaderModule({
-        code: thetaCode
-    })
-
-    const thetaPipeline = device.createComputePipeline({
-        layout: "auto",
-        compute: { module: thetaModule }
-    })
-
-    const thetaTexture = device.createTexture({
-        format: "r32float",
-        dimension: "3d",
-        size: [canvas.clientWidth, canvas.clientHeight, scene.numWavelengths],
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
-    })
-
-    // -----------------prop(agation) setup-----------------//
-    const propModule = device.createShaderModule({
-        code: propCode
-    })
-
-    const propPipeline = device.createComputePipeline({
-        layout: "auto",
-        compute: { module: propModule }
-    })
-
-    const propTexture = device.createTexture({
-        format: "rg32float",
-        dimension: "3d",
-        size: [canvas.clientWidth, canvas.clientHeight, scene.numWavelengths],
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
-    })
-
-    const propBindGroup = device.createBindGroup({
-        layout: propPipeline.getBindGroupLayout(0),
-        entries: [
-            { binding: 0, resource: propTexture.createView() },
-            { binding: 1, resource: thetaTexture.createView() }
-        ]
-    })
-
     // -----------------display prop setup-----------------//
     const displayPropModule = device.createShaderModule({
         code: displayPropCode
@@ -334,7 +336,7 @@ async function main(scene) {
         }
 
         frameCount++
-        document.getElementById("frameCount").innerHTML = "Time Elapsed: " + (frameCount*0.065).toFixed(1)+"fs";
+        document.getElementById("frameCount").innerHTML = "Time Elapsed: " + (frameCount * 0.065).toFixed(1) + "fs"
 
         // -----------------update stuff----------------- //
         updateUniformsViews.time[0] = frameCount
@@ -348,7 +350,8 @@ async function main(scene) {
                 { binding: 2, resource: waveTextures[lastUpdatedTexture].createView() }, //the last texture that was updated
                 { binding: 3, resource: waveTextures[(lastUpdatedTexture + 2) % 3].createView() }, //the before-last texture
                 { binding: 4, resource: obstaclesTexture.createView() }, //the obstacles
-                { binding: 5, resource: iorTexture.createView() }
+                { binding: 5, resource: iorTexture.createView() },
+                // { binding: 6, resource: propTexture.createView() }
             ]
         })
 
@@ -457,13 +460,13 @@ async function main(scene) {
         renderPassDescriptor.colorAttachments[0].view = context.getCurrentTexture().createView() //set the target of the shader to be the canvas
 
         const renderMode = document.getElementById("renderSelect").value
-        if (renderMode == "wave"){
+        if (renderMode == "wave") {
             renderUniformsViews.renderMode[0] = 0
         }
-        else if (renderMode =="color"){
+        else if (renderMode == "color") {
             renderUniformsViews.renderMode[0] = 1
         }
-        else if (renderMode == "direction"){
+        else if (renderMode == "direction") {
             renderUniformsViews.renderMode[0] = 2
         }
         device.queue.writeBuffer(renderUniformsBuffer, 0, renderUniformsValues)

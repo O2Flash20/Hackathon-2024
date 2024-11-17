@@ -16,12 +16,17 @@ export default /*wgsl*/ `
     }
     v /= f32(dim.z);
 
+    let rightCol = vec3f(1, 0, 0);
+    let leftCol = vec3f(0, 1, 0);
+    let upCol = vec3f(0, 0, 1);
+    let downCol = vec3f(0, 0.9, 0.9);
+
+    let col = clamp(v.r, 0, 1)*rightCol + clamp(-v.r, 0, 1)*leftCol + clamp(v.g, 0, 1)*upCol + clamp(-v.g, 0, 1)*downCol; 
+
     textureStore(
         outputTexture, i,
         vec4f(
-            v.r,
-            v.g,
-            -v.r,
+            col,
             1
         )
     );
