@@ -12,7 +12,8 @@
 }
 #content {
     margin:auto;
-    width: 900px;
+    display: flex;
+    width: 920px;
 }
 #divCanvas {
     justify-content: center;
@@ -21,9 +22,9 @@
 }
 #divControl {
     float:right;
+    padding-left:10px;
     height: 600px;
     width: 270px;
-    
 }
 #controlTop {
     background-color: rgb(60, 65, 65);
@@ -69,7 +70,7 @@ select {
     width: 50%;
     background-color: lightgrey;
 }
-h2 {
+.controlTitle {
     color:white;
     text-shadow: 1px 1px 2px black;
     box-shadow: 2px 2px 4px black;
@@ -110,4 +111,8 @@ button:active {
 }
 #numWavelengths,#brightness {
     width: 90%;
+}
+#title {
+    color:white;
+    text-shadow: 2px 2px 4px black;
 }
