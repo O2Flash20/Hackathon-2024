@@ -108,6 +108,6 @@ button:active {
     color: white;
     font-size:large;
 }
-#numWavelengths {
+#numWavelengths,#brightness {
     width: 90%;
 }

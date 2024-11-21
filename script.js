@@ -374,7 +374,7 @@ async function main(scene) {
         lastUpdatedTexture = (lastUpdatedTexture + 1) % 3 //a new texture has just been updated
 
         // -----------------color stuff-----------------
-        colorUniformsViews.brightness[0] = document.getElementById("brightness").value
+        colorUniformsViews.brightness[0] = Math.pow(10,document.getElementById("brightness").value)
         device.queue.writeBuffer(colorUniformsBuffer, 0, colorUniformsValues)
         const colorBindGroup = device.createBindGroup({
             layout: colorPipeline.getBindGroupLayout(0),
